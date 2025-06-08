@@ -121,26 +121,15 @@ const TickMark = styled.div`
   box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
 `;
 
-const Dial = ({ onRotate }) => {
+const Dial = ({ onRotate, currentCount, currentDirection }) => {
   const [rotation, setRotation] = useState(0);
-  const [currentCount, setCurrentCount] = useState(0);
-  const [currentDirection, setCurrentDirection] = useState(null);
 
   const handleRotate = (direction) => {
     const newRotation = direction === 'left' 
       ? rotation - 36 
       : rotation + 36;
     setRotation(newRotation);
-    
-    if (currentDirection === direction) {
-      setCurrentCount(prev => prev + 1);
-    } else {
-      setCurrentCount(1);
-      setCurrentDirection(direction);
-    }
-
-    const currentNumber = Math.abs(Math.floor(newRotation / 36) % 10) + 1;
-    onRotate(direction, currentNumber);
+    onRotate(direction);
   };
 
   return (

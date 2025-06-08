@@ -79,10 +79,11 @@ const Vault = () => {
   const [gameState, setGameState] = useState('idle');
   const [instructions, setInstructions] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState(10);
+  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState(30);
   const [gameTimeLeft, setGameTimeLeft] = useState(180);
   const [currentCount, setCurrentCount] = useState(0);
   const [hasStartedCurrentInstruction, setHasStartedCurrentInstruction] = useState(false);
+  const [currentDirection, setCurrentDirection] = useState(null);
 
   useEffect(() => {
     let memorizeTimer;
@@ -130,7 +131,7 @@ const Vault = () => {
     };
   }, [gameState]);
 
-  const handleDialRotation = (direction, number) => {
+  const handleDialRotation = (direction) => {
     if (gameState !== 'playing') return;
     
     const currentInstruction = instructions[currentStep];
@@ -140,10 +141,7 @@ const Vault = () => {
       return;
     }
 
-    if (!hasStartedCurrentInstruction) {
-      setHasStartedCurrentInstruction(true);
-    }
-
+    setCurrentDirection(direction);
     setCurrentCount(prev => prev + 1);
   };
 
@@ -157,6 +155,7 @@ const Vault = () => {
     } else {
       setCurrentStep(prev => prev + 1);
       setCurrentCount(0);
+      setCurrentDirection(null);
       setHasStartedCurrentInstruction(false);
     }
   };
@@ -164,7 +163,7 @@ const Vault = () => {
   const startGame = () => {
     generateInstructions();
     setGameState('memorizing');
-    setMemorizeTimeLeft(10);
+    setMemorizeTimeLeft(30);
     setGameTimeLeft(180);
     setCurrentStep(0);
     setCurrentCount(0);
@@ -173,22 +172,13 @@ const Vault = () => {
 
   const generateInstructions = () => {
     const newInstructions = [];
-    let lastDirection = null;
-
     for (let i = 0; i < 10; i++) {
-      let direction;
-      do {
-        direction = Math.random() < 0.5 ? 'left' : 'right';
-      } while (direction === lastDirection);
-
+      const direction = Math.random() < 0.5 ? 'left' : 'right';
       newInstructions.push({
         direction,
         number: Math.floor(Math.random() * 10) + 1
       });
-
-      lastDirection = direction;
     }
-
     setInstructions(newInstructions);
   };
 
@@ -207,7 +197,7 @@ const Vault = () => {
             />
           )}
         </AnimatePresence>
-        <Dial onRotate={handleDialRotation} />
+        <Dial onRotate={handleDialRotation} currentCount={currentCount} currentDirection={currentDirection} />
       </VaultBody>
       
       <Instructions 

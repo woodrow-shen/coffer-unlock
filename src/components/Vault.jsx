@@ -8,10 +8,12 @@ import GameStatus from './GameStatus';
 
 const VaultContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
   padding: 2rem;
   min-height: 100vh;
+  gap: 2rem;
 `;
 
 const VaultBody = styled(motion.div)`
@@ -21,6 +23,31 @@ const VaultBody = styled(motion.div)`
   border-radius: ${props => props.theme.borderRadius};
   position: relative;
   box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+`;
+
+const RightPanel = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2rem;
+  min-width: 600px;
+`;
+
+const LeftInstructionPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 250px;
+  gap: 1rem;
+`;
+
+const RightControlPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 300px;
+  gap: 1rem;
 `;
 
 const ConfirmButton = styled.button`
@@ -63,6 +90,42 @@ const CompletedInstruction = styled.div`
   }
 `;
 
+const TimeSettingContainer = styled.div`
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+`;
+
+const TimeSettingLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+`;
+
+const TimeInput = styled.input`
+  width: 80px;
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  
+  &:focus {
+    outline: none;
+    border-color: #4CAF50;
+  }
+`;
+
+const TimeUnit = styled.span`
+  margin-left: 8px;
+  font-size: 16px;
+  color: #666;
+`;
+
 const VaultDoor = styled(motion.div)`
   position: absolute;
   top: 0;
@@ -79,11 +142,12 @@ const Vault = () => {
   const [gameState, setGameState] = useState('idle');
   const [instructions, setInstructions] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState(30);
+  const [memorizeTimeLeft, setMemorizeTimeLeft] = useState(60);
   const [gameTimeLeft, setGameTimeLeft] = useState(180);
   const [currentCount, setCurrentCount] = useState(0);
   const [hasStartedCurrentInstruction, setHasStartedCurrentInstruction] = useState(false);
   const [currentDirection, setCurrentDirection] = useState(null);
+  const [customMemorizeTime, setCustomMemorizeTime] = useState(60);
 
   useEffect(() => {
     let memorizeTimer;
@@ -163,7 +227,7 @@ const Vault = () => {
   const startGame = () => {
     generateInstructions();
     setGameState('memorizing');
-    setMemorizeTimeLeft(30);
+    setMemorizeTimeLeft(customMemorizeTime);
     setGameTimeLeft(180);
     setCurrentStep(0);
     setCurrentCount(0);
@@ -200,37 +264,60 @@ const Vault = () => {
         <Dial onRotate={handleDialRotation} currentCount={currentCount} currentDirection={currentDirection} />
       </VaultBody>
       
-      <Instructions 
-        instructions={instructions} 
-        currentStep={currentStep}
-        gameState={gameState}
-      />
-      
-      <Timer 
-        timeLeft={gameState === 'memorizing' ? memorizeTimeLeft : gameTimeLeft}
-        gameState={gameState}
-        timerType={gameState === 'memorizing' ? 'memorizing' : 'playing'}
-      />
-      
-      {gameState === 'playing' && (
-        <>
-          <CompletedInstructions>
-            {completedInstructions.map((instruction, index) => (
-              <CompletedInstruction key={index}>
-                {index + 1}. {instruction.direction === 'left' ? '左' : '右'} {instruction.number} 次
-              </CompletedInstruction>
-            ))}
-          </CompletedInstructions>
-          <ConfirmButton onClick={handleConfirmInstruction}>
-            確認當前指令
-          </ConfirmButton>
-        </>
-      )}
-      
-      <GameStatus 
-        gameState={gameState}
-        onStart={startGame}
-      />
+      <RightPanel>
+        <LeftInstructionPanel>
+          <Instructions 
+            instructions={instructions} 
+            currentStep={currentStep}
+            gameState={gameState}
+          />
+        </LeftInstructionPanel>
+        
+        <RightControlPanel>
+          <Timer 
+            timeLeft={gameState === 'memorizing' ? memorizeTimeLeft : gameTimeLeft}
+            gameState={gameState}
+            timerType={gameState === 'memorizing' ? 'memorizing' : 'playing'}
+          />
+          
+          {gameState === 'playing' && (
+            <>
+              <CompletedInstructions>
+                {completedInstructions.map((instruction, index) => (
+                  <CompletedInstruction key={index}>
+                    {index + 1}. {instruction.direction === 'left' ? '左' : '右'} {instruction.number} 次
+                  </CompletedInstruction>
+                ))}
+              </CompletedInstructions>
+              <ConfirmButton onClick={handleConfirmInstruction}>
+                確認當前指令
+              </ConfirmButton>
+            </>
+          )}
+          
+          {gameState === 'idle' && (
+            <TimeSettingContainer>
+              <TimeSettingLabel htmlFor="memorize-time">
+                記憶時間設定：
+              </TimeSettingLabel>
+              <TimeInput
+                id="memorize-time"
+                type="number"
+                min="10"
+                max="300"
+                value={customMemorizeTime}
+                onChange={(e) => setCustomMemorizeTime(Math.max(10, Math.min(300, parseInt(e.target.value) || 60)))}
+              />
+              <TimeUnit>秒</TimeUnit>
+            </TimeSettingContainer>
+          )}
+          
+          <GameStatus 
+            gameState={gameState}
+            onStart={startGame}
+          />
+        </RightControlPanel>
+      </RightPanel>
     </VaultContainer>
   );
 };
